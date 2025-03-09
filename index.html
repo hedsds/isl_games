@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Letter & Digit Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f4f4f4;
+        }
+        #character-image {
+            width: 200px;
+            height: 200px;
+            object-fit: contain; /* Ensures all images are properly sized */
+            border: 2px solid #333;
+            border-radius: 10px;
+            margin: 20px;
+        }
+        input, button {
+            margin: 10px;
+            padding: 10px;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Letter & Digit Game</h1>
+    
+    <div>
+        <img id="character-image" src="/static/images/placeholder.jpg" alt="Character">
+    </div>
+    
+    <form id="guess-form">
+        <input type="text" id="user-input" placeholder="Enter your guess" maxlength="1">
+        <button type="submit">Submit</button>
+    </form>
+
+    <p id="message"></p>
+
+    <script>
+        let currentCharacter = "";
+
+        function fetchCharacter() {
+            fetch("/get_character")
+                .then(response => response.json())
+                .then(data => {
+                    currentCharacter = data.character;
+                    document.getElementById("character-image").src = data.image;
+                });
+        }
+
+        document.getElementById("guess-form").addEventListener("submit", function(event) {
+            event.preventDefault();
+            let userInput = document.getElementById("user-input").value;
+
+            fetch("/check_input", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ input: userInput, character: currentCharacter })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("message").innerText = data.message;
+                if (data.correct) {
+                    fetchCharacter(); // Load new character on correct guess
+                    document.getElementById("user-input").value = "";
+                }
+            });
+        });
+
+        window.onload = fetchCharacter;
+    </script>
+</body>
+</html>
